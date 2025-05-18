@@ -1,90 +1,109 @@
-/*
- * çº¿æ€§è¡¨å®ç° - é¡ºåºå­˜å‚¨ç»“æ„
- * ç¼–è¯‘æŒ‡ä»¤: gcc -Wall -Wextra -std=c99 -o lab1 å®éªŒä¸€.c
- */
 #include <stdio.h>
 #include <stdlib.h>
-#include <errno.h>
 
-#define MAX_SIZE 100
+typedef int ElementType; // ¶¨ÒåÔªËØÀàĞÍ
 
-typedef struct {
-    int data[MAX_SIZE];  // æ•°æ®å­˜å‚¨æ•°ç»„
-    int length;          // å½“å‰çº¿æ€§è¡¨é•¿åº¦
-} SeqList;
+/* Á´±í½áµã¶¨Òå */
+typedef struct ListNode {
+    ElementType data;
+    struct ListNode *next;
+} Node, *List;
 
-/* åˆå§‹åŒ–çº¿æ€§è¡¨ */
-void init(SeqList *list) {
-    list->length = 0;
+/* 1. ´´½¨¿Õ±í */
+List CreateList() {
+    List L = (List)malloc(sizeof(Node));
+    L->next = NULL;
+    return L;
 }
 
-/* åˆ¤æ–­çº¿æ€§è¡¨æ˜¯å¦ä¸ºç©º */
-int is_empty(const SeqList list) {
-    return list.length == 0;
+/* 2. ÅĞ¶Ï±í¿Õ */
+int IsEmpty(List L) {
+    return L->next == NULL;
 }
 
-/* è·å–æŒ‡å®šä½ç½®çš„å…ƒç´  */
-int get_element(const SeqList list, int index) {
-    if(index < 0 || index >= list.length) {
-        errno = EINVAL;
-        return -1;
+/* 3. »ñÈ¡µÚi¸öÔªËØ */
+ElementType GetElem(List L, int i) {
+    Node *p = L->next;
+    int cnt = 1;
+    
+    while(p && cnt < i) {
+        p = p->next;
+        cnt++;
     }
-    return list.data[index];
-}
-/* å‘çº¿æ€§è¡¨æ’å…¥å…ƒç´  */
-int insert(SeqList *list, int value) {
-    if(list->length >= MAX_SIZE) {
-        errno = ENOMEM;
-        return -1;
+    if(!p || cnt > i) {
+        printf("Î»ÖÃÎŞĞ§\n");
+        exit(1);
     }
-    list->data[list->length] = value;
-    list->length++;
-    return 0;
+    return p->data;
 }
 
-/* ä»çº¿æ€§è¡¨åˆ é™¤å…ƒç´  */
-int delete(SeqList *list, int index) {
-    if(index < 0 || index >= list->length) {
-        errno = EINVAL;
-        return -1;
+/* 4. É¾³ıµÚi¸öÔªËØ */
+void Delete(List L, int i) {
+    Node *p = L;
+    int cnt = 0;
+    
+    while(p->next && cnt < i-1) {
+        p = p->next;
+        cnt++;
     }
-    for(int i = index; i < list->length - 1; i++) {
-        list->data[i] = list->data[i + 1];
+    if(!(p->next) || cnt > i-1) {
+        printf("É¾³ıÎ»ÖÃ´íÎó\n");
+        return;
     }
-    list->length--;
-    return 0;
+    Node *q = p->next;
+    p->next = q->next;
+    free(q);
 }
+
+/* 5. ²åÈëĞÂÔªËØµ½µÚiÎ» */
+void Insert(List L, ElementType x, int i) {
+    Node *p = L;
+    int cnt = 0;
+    
+    while(p && cnt < i-1) {
+        p = p->next;
+        cnt++;
+    }
+    if(!p || cnt > i-1) {
+        printf("²åÈëÎ»ÖÃ´íÎó\n");
+        return;
+    }
+    Node *newNode = (Node*)malloc(sizeof(Node));
+    newNode->data = x;
+    newNode->next = p->next;
+    p->next = newNode;
+}
+
+/* ´òÓ¡Á´±í */
+void PrintList(List L) {
+    Node *p = L->next;
+    while(p) {
+        printf("%d ", p->data);
+        p = p->next;
+    }
+    printf("\n");
+}
+
 int main() {
-    SeqList list;
-    init(&list);
+    List L = CreateList();
     
-    // æµ‹è¯•æ’å…¥
-    for(int i = 1; i <= 5; i++) {
-        if(insert(&list, i) == -1) {
-            perror("æ’å…¥å¤±è´¥");
-            exit(EXIT_FAILURE);
-        }
-    }
+    // ²åÈë²âÊÔ
+    Insert(L, 10, 1);
+    Insert(L, 20, 2);
+    Insert(L, 30, 3);
+    printf("²åÈë½á¹û£º");
+    PrintList(L); // Ó¦Êä³ö10 20 30
     
-    // æµ‹è¯•è·å–å…ƒç´ 
-    int val = get_element(list, 2);
-    if(val == -1) {
-        perror("è·å–å…ƒç´ å¤±è´¥");
-    } else {
-        printf("ç¬¬2ä¸ªå…ƒç´ : %d\n", val);
-    }
+    // É¾³ı²âÊÔ
+    Delete(L, 2);
+    printf("É¾³ıºó£º");
+    PrintList(L); // Ó¦Êä³ö10 30
     
-    // æµ‹è¯•åˆ é™¤
-    if(delete(&list, 2) == -1) {
-        perror("åˆ é™¤å¤±è´¥");
-    }
+    // »ñÈ¡ÔªËØ²âÊÔ
+    printf("µÚ2¸öÔªËØ£º%d\n", GetElem(L, 2)); // Ó¦Êä³ö30
     
-    val = get_element(list, 2);
-    if(val == -1) {
-        perror("è·å–å…ƒç´ å¤±è´¥");
-    } else {
-        printf("åˆ é™¤åç¬¬2ä¸ªå…ƒç´ : %d\n", val);
-    }
+    // ÅĞ¿Õ²âÊÔ
+    printf("±í¿Õ£¿%s\n", IsEmpty(L) ? "ÊÇ" : "·ñ");
     
-    return EXIT_SUCCESS;
+    return 0;
 }
